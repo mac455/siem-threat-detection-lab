@@ -1,0 +1,330 @@
+#!/bin/bash 
+
+# Web Traffic simulate script for SIEM Project 
+
+echo "Starting web traffic simulation" 
+
+NORMAL_USER_AGENT=(
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+	"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0"
+   	"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15"
+)
+
+MALICIOUS_AGENTS=(
+	"curl/7.68.0"
+	"sqlmap/1.4.7"
+	"Nikito/2.16"
+	"python-requests/2.25.1"
+)
+
+generate_normal_traffic() {
+	local pages=("/" "index.html" "/about.html" "/contact.html" "/products.html" "/services.html")
+
+	for i in {1..50}; do 
+		page=${pages[$RANDOM % ${#pages[@]}]} # Uses moduluo operation to return indicies of the pages array for the web server - Replicates users visting pages in random order 
+		user_agent=${NORMAL_USER_AGENT[$RANDOM % 3]} # Choosing either of two normal user agents
+
+		curl -s -A "$user_agent" "http://localhost$page" > /dev/null
+		sleep $(echo "scale=1; $RANDOM/32767*2" | bc) # Creates a realistic delay interval between request - Essentially time between  clicks by  user
+	done 
+}
+#Reconnaissance phase - Information gathering
+generate_reconnaissance() {
+    local recon_targets=(
+        "/robots.txt"
+        "/.env"
+        "/config.php"
+        "/wp-config.php"
+        "/.git/config"
+        "/backup"
+        "/database.sql"
+        "/phpinfo.php"
+        "/server-status"
+        "/server-info"
+    )
+    
+    echo "Generating reconnaissance attempts..."
+    for target in "${recon_targets[@]}"; do 
+
+    	user_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+    	curl -s -A "$user_agent" "http://localhost$target" > /dev/null
+        echo "Reconnaissance: $user_agent accessing $target"
+        sleep $(echo "scale=1; $RANDOM/32767*1+0.5" | bc)
+    done
+}
+
+generate_admin_discovery() {
+    local admin_paths=(
+        "/admin"
+        "/administrator"
+        "/wp-admin"
+        "/admin.php"
+        "/login"
+        "/login.php"
+        "/dashboard"
+        "/control"
+        "/manager"
+        "/phpmyadmin"
+    )
+    
+    echo "Generating admin panel discovery..."
+    for path in "${admin_paths[@]}"; do
+        user_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+        curl -s -A "$user_agent" "http://localhost$path" > /dev/null
+        echo "Admin discovery: $path"
+        sleep 1
+    done
+}
+
+# SQL injection
+generate_sql_injection() {
+	local sql_payloads=(
+        "?id=1%27%20OR%20%271%27=%271"
+        "?user=admin%27--"
+        "?id=1%20UNION%20SELECT%20*%20FROM%20users"
+        "?search=%27;%20DROPTABLE%20users;--"
+        "?id=1%27%20AND%201=1--"
+         )
+
+         echo "Generating SQL injection attacks..."
+         for payload in "${sql_payloads[@]}"; do 
+         	curl -s -A "sqlmap/1.4.7" "http://localhost/search.php$payload" > /dev/null
+       		 sleep 1
+    	done 
+}
+
+
+# XSS attempts
+generate_xss_attacks() {
+    local xss_payloads=(
+        "?search=<script>alert('XSS')</script>"
+        "?comment=<img src=x onerror=alert(1)>"
+        "?name=<svg onload=alert('XSS')>"
+        "?name=<svg onload=alert('XSS')>"
+        "?input=javascript:alert('XSS')"
+    )
+    
+    echo "Generating XSS attempts..."
+    for payload in "${xss_payloads[@]}"; do
+        curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" "http://localhost/form.php$payload" > /dev/null
+        sleep 1
+    done
+}
+
+# Directory traversal attack 
+generate_directory_traversal() {
+    local traversal_payloads=(
+        "/../../../../etc/passwd"
+        "/../../etc/shadow"
+        "/../../../var/log/apache2/access.log"
+        "/../../../../proc/version"
+    )
+    
+    echo "Generating directory traversal attempts..."
+    for payload in "${traversal_payloads[@]}"; do
+        curl -s -A "curl/7.68.0" "http://localhost$payload" > /dev/null
+        sleep 1
+    done
+}
+
+# Vulnerability scanning simulation
+generate_vuln_scan() {
+    local scan_paths=(
+        "/admin"
+        "/wp-admin"
+        "/phpmyadmin"
+        "/backup"
+        "/.env"
+        "/config.php"
+        "/database.sql"
+        "/robots.txt"
+    )
+    
+    echo "Generating vulnerability scan..."
+    for path in "${scan_paths[@]}"; do
+        curl -s -A "Nikto/2.1.6" "http://localhost$path" > /dev/null
+        sleep 0.5
+    done
+}
+
+# Multi-stage attack simulation (realistic attack progression)
+generate_multistage_attack() {
+    echo "=== Multi-Stage Attack Simulation ==="
+    
+    # Single attacker using consistent tools per phase
+    local recon_user_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+    local admin_user_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+    
+    # Stage 1: Reconnaissance (same attacker, same tool)
+    echo "Stage 1: Reconnaissance phase..."
+    curl -s -A "$recon_user_agent" "http://localhost/robots.txt" > /dev/null
+    echo "Multi-stage recon: $recon_user_agent accessing robots.txt"
+    sleep 2
+    curl -s -A "$recon_user_agent" "http://localhost/.env" > /dev/null
+    echo "Multi-stage recon: $recon_user_agent accessing .env"
+    sleep 2
+    curl -s -A "$recon_user_agent" "http://localhost/admin" > /dev/null
+    echo "Multi-stage recon: $recon_user_agent accessing admin"
+    sleep 3
+    
+    # Stage 2: Admin panel discovery (same attacker, possibly different tool)
+    echo "Stage 2: Admin discovery phase..."
+    curl -s -A "$admin_user_agent" "http://localhost/wp-admin" > /dev/null
+    echo "Multi-stage admin: $admin_user_agent accessing wp-admin"
+    sleep 2
+    curl -s -A "$admin_user_agent" "http://localhost/administrator" > /dev/null
+sleep 2
+    
+    # Stage 3: Exploitation attempts (escalation to specialized tools)
+    echo "Stage 3: Exploitation phase..."
+    curl -s -A "sqlmap/1.4.7" "http://localhost/login.php?user=admin' OR 1=1--" > /dev/null
+    echo "Multi-stage exploit: sqlmap/1.4.7 SQL injection"
+    sleep 2
+    # XSS might use normal browser to avoid detection
+    local stealth_user_agent=${NORMAL_USER_AGENT[$RANDOM % ${#NORMAL_USER_AGENT[@]}]}
+    curl -s -A "$stealth_user_agent" "http://localhost/search.php?q=<script>alert('XSS')</script>" > /dev/null
+    echo "Multi-stage exploit: $stealth_user_agent XSS (stealth)"
+    sleep 2
+    curl -s -A "curl/7.68.0" "http://localhost/../../../../etc/passwd" > /dev/null
+    echo "Multi-stage exploit: curl/7.68.0 directory traversal"
+    
+    echo "Multi-stage attack completed"
+}
+
+# High-velocity attack simulation
+generate_high_velocity_attack() {
+    echo "Generating high-velocity attack..."
+    
+    # Rapid-fire requests from same "attacker" using various tools
+    for i in {1..25}; do
+        attack_type=$((RANDOM % 3))
+        case $attack_type in
+            0)
+                # SQL injection with random tool
+                sql_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+                curl -s -A "$sql_agent" "http://localhost/search.php?id=$i' OR 1=1--" > /dev/null
+                ;;
+            1)
+                # Admin scanning with random tool
+                scan_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+                curl -s -A "$scan_agent" "http://localhost/admin$i" > /dev/null
+                sleep 2
+    
+    # Stage 3: Exploitation attempts (escalation to specialized tools)
+    echo "Stage 3: Exploitation phase..."
+    curl -s -A "sqlmap/1.4.7" "http://localhost/login.php?user=admin' OR 1=1--" > /dev/null
+    echo "Multi-stage exploit: sqlmap/1.4.7 SQL injection"
+    sleep 2
+    # XSS might use normal browser to avoid detection
+    local stealth_user_agent=${NORMAL_USER_AGENT[$RANDOM % ${#NORMAL_USER_AGENT[@]}]}
+    curl -s -A "$stealth_user_agent" "http://localhost/search.php?q=<script>alert('XSS')</script>" > /dev/null
+    echo "Multi-stage exploit: $stealth_user_agent XSS (stealth)"
+    sleep 2
+    curl -s -A "curl/7.68.0" "http://localhost/../../../../etc/passwd" > /dev/null
+    echo "Multi-stage exploit: curl/7.68.0 directory traversal"
+    
+    echo "Multi-stage attack completed"
+}
+
+# High-velocity attack simulation
+generate_high_velocity_attack() {
+    echo "Generating high-velocity attack..."
+    
+    # Rapid-fire requests from same "attacker" using various tools
+    for i in {1..25}; do
+        attack_type=$((RANDOM % 3))
+        case $attack_type in
+            0)
+                # SQL injection with random tool
+                sql_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+                curl -s -A "$sql_agent" "http://localhost/search.php?id=$i' OR 1=1--" > /dev/null
+                ;;
+            1)
+                # Admin scanning with random tool
+                scan_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+                curl -s -A "$scan_agent" "http://localhost/admin$i" > /dev/null
+                   ;;
+            2)
+                # XSS with mix of normal/malicious agents
+                if [ $((RANDOM % 2)) -eq 0 ]; then
+                    xss_agent=${NORMAL_USER_AGENT[$RANDOM % ${#NORMAL_USER_AGENT[@]}]}
+                else
+                    xss_agent=${MALICIOUS_AGENTS[$RANDOM % ${#MALICIOUS_AGENTS[@]}]}
+                fi
+                curl -s -A "$xss_agent" "http://localhost/form.php?input=<script>alert($i)</script>" > /dev/null
+                ;;
+        esac
+        sleep 0.2  # Very fast attacks
+    done
+}
+
+echo "Phase 1-2: Reconnaissance..."
+generate_reconnaissance &
+RECON_PID=$!
+
+sleep 8
+
+echo "Phase 3: Admin discovery..."
+generate_admin_discovery &
+ADMIN_PID=$!
+
+sleep 5
+
+echo "Phase 4: Multi-stage attack..."
+generate_multistage_attack &
+MULTI_PID=$!
+
+sleep 10
+
+echo "Phase 5: SQL injection..."
+generate_sql_injection &
+SQL_PID=$!
+
+sleep 3
+
+echo "Phase 6: XSS attacks..."
+generate_xss_attacks &
+XSS_PID=$!
+
+sleep 2
+
+echo "Phase 7: Directory traversal..."
+generate_directory_traversal &
+DIR_PID=$!
+
+sleep 4
+
+echo "Phase 8: Vulnerability scanning..."
+generate_vuln_scan &
+VULN_PID=$!
+
+sleep 5
+
+echo "Phase 9: High-velocity attack..."
+generate_high_velocity_attack &
+VELOCITY_PID=$!
+
+# Wait for all background processes
+wait $NORMAL_PID $RECON_PID $ADMIN_PID $MULTI_PID $SQL_PID $XSS_PID $DIR_PID $VULN_PID $VELOCITY_PID
+
+echo "=== Web Traffic Simulation Completed ==="
+echo "Generated realistic multi-stage attack patterns including:"
+echo "- Reconnaissance (robots.txt, .env, config files)"
+echo "- Admin panel discovery (/admin, /wp-admin)"
+echo "- SQL injection attempts"
+echo "- XSS attacks"
+echo "- Directory traversal"
+echo "- Vulnerability scanning"
+echo "- High-velocity attacks"
+echo ""
+echo "Check Apache logs: sudo tail -f /var/log/apache2/access.log" 
+
+
+
+                
+                
+
+
+
+
