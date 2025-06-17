@@ -44,21 +44,24 @@ Created **comprehensive security dashboard** with **4 key visualisations**:
 - Visual distribution of different attack categories
 - Proportional representation of SQL injection, XSS, directory traversal, and reconnaissance attempts
 - Real-time attack type classification and trending
-  ![image](https://github.com/user-attachments/assets/9c8f9241-7e11-42f2-b472-2a5cca5be1c0)
-
+![image](https://github.com/user-attachments/assets/cdf41e19-96be-4924-85e1-ae786200e150)
 
 #### 2. Most Requested URLs (Bar Chart)
 - Horizontal bar chart showing frequently targeted endpoints
 - Identification of high-risk application paths
 - Attack surface analysis and vulnerability hotspot detection
+![image](https://github.com/user-attachments/assets/7fa6f329-9b30-49e8-b00a-79519ff89ad0)
 
 #### 3. Most Used User Agents (Data Table)
 - Detailed breakdown of user agent strings and their frequency
 - Identification of legitimate browsers vs. automated security tools
 - Classification of normal traffic vs. malicious scanning tools
-
+  ![image](https://github.com/user-attachments/assets/d5d081a3-8b93-4e4d-9f13-14a75b14a5f6)
+  
 #### 4. Total Web Requests (Single Number)
 - Real-time counter of total HTTP requests processed
 - Overall system activity monitoring
 - Baseline establishment for traffic volume analysis
+  ![image](https://github.com/user-attachments/assets/2b8329a5-d690-4383-ba44-bdd308324207)
+
 
