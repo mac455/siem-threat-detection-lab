@@ -60,7 +60,7 @@ Created **comprehensive security dashboard** with **4 key visualisations**:
 - Visual distribution of different attack categories
 - Proportional representation of SQL injection, XSS, directory traversal, and reconnaissance attempts
 - Real-time attack type classification and trending
-![Pie-chart](https://github.com/user-attachments/assets/cdf41e19-96be-4924-85e1-ae786200e150)
+![image](https://github.com/user-attachments/assets/cdf41e19-96be-4924-85e1-ae786200e150)
 
 #### 2. Most Requested URLs (Bar Chart)
 - Horizontal bar chart showing frequently targeted endpoints
