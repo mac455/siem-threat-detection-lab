@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project demonstrates the implementation of a comprehensive Security Information and Event Management (SIEM) solution using **Graylog**, **OpenSearch**, and **MongoDB**. The system processes real-time security events, detects sophisticated cyber attacks, and provides security dashboards for visualising security operations.
+This project demonstrates the implementation of a comprehensive Security Information and Event Management (SIEM) solution using **Graylog**, **OpenSearch**, and **MongoDB**. The system processes real-time security events, detects sophisticated cyber attacks, and provides security dashboards for visualising security operations using an Ubuntu VM (Virtualbox).
 
 ##  Architecture
 
@@ -19,25 +19,41 @@ Web Traffic → Apache Logs → rsyslog → Graylog → OpenSearch → Security 
 - **Log Sources:** Apache Web Server, Custom Applications
 - **Operating System:** Ubuntu (VirtualBox VM)
 
-## 🎯 Key Achievements
+##  Key Achievements
 
-### ✅ Multi-Source Log Ingestion
+###  Multi-Source Log Ingestion
 - Configured **Apache web server** log collection
 - Implemented **rsyslog forwarding** to Graylog
 - Set up **real-time log processing** pipeline
 - Created **custom application log** formats (JSON)
 
-### ✅ Advanced Threat Detection Rules
-Developed **8 sophisticated detection rules** covering:
-**classify_malicious_user_agents_raw** - Detection of malicious user agents
-2. **classify_normal_traffic** - Classification of legitimate web traffic
-3. **classify_normal_user_agents_raw** - Identification and classification of legitimate user agents
-4. **detect_directory_traversal** - Path traversal and file inclusion attack detection
-5. **detect_scanner_activity** - Vulnerability scanner detection
-6. **detect_sql_injection** - Advanced SQL injection  detection
-7. **detect_web_reconnaissance** - Web application reconnaissance detection
-8. **detect_xss_attack** - Cross-site scripting (XSS) payload detection and analysis
+###  Advanced Threat Detection Rules
+Developed **8 sophisticated detection rules** :
+- **classify_malicious_user_agents_raw** - Detection of malicious user agents
+- **classify_normal_traffic** - Classification of legitimate web traffic
+- **classify_normal_user_agents_raw** - Identification and classification of legitimate user agents
+- **detect_directory_traversal** - Path traversal and file inclusion attack detection
+- **detect_scanner_activity** - Vulnerability scanner detection
+- **detect_sql_injection** - Advanced SQL injection  detection
+- **detect_web_reconnaissance** - Web application reconnaissance detection
+- **detect_xss_attack** - Cross-site scripting (XSS) payload detection and analysis
 
+## Data Processing & Field Extraction
+
+#### Manual Field Extractors for Apache Logs:
+- **Custom field extractors** for Apache logs:
+  - `http_method` (GET, POST, etc.)
+  - `http_status` (200, 404, 500, etc.)
+  - `user_agent` (Browser/tool identification)
+  - `requested_url` (Target endpoint analysis)
+
+#### Pipeline Rule-Generated Fields:
+- **Automated field extraction** through detection pipeline rules:
+  - `attack_type` (SQL injection, XSS, directory traversal, reconnaissance)
+  - `malicious_agent` (Automated security tools and scanners)
+  - `normal_agent` (Legitimate browser classifications)
+
+### Dashboards
 Created **comprehensive security dashboard** with **4 key visualisations**:
 
 #### 1. Top Attack Types (Pie Chart)
