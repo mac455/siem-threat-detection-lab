@@ -62,7 +62,7 @@ Created **comprehensive security dashboard** with **4 key visualisations**:
 - Real-time attack type classification and trending
 ![image](https://github.com/user-attachments/assets/cdf41e19-96be-4924-85e1-ae786200e150)
 
-#### 2. Most Requested URLs (Bar Chart)
+#### 2. Most Requested URLs (Data Table)
 - Horizontal bar chart showing frequently targeted endpoints
 - Identification of high-risk application paths
 - Attack surface analysis and vulnerability hotspot detection
